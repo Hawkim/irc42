@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
+#include <algorithm>
+#include <cstdlib>
+#include <iostream>
 #include "state.h"
 
 // prototypes for each IRC command handler:
@@ -18,4 +22,4 @@ void cmd_MODE   (Client* c, const std::vector<std::string>& p);
 void cmd_TOPIC  (Client* c, const std::vector<std::string>& p);
 void cmd_NAMES  (Client* c, const std::vector<std::string>& p);
 
-#endif // COMMANDS_H
+#endif

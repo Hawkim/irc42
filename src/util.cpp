@@ -1,43 +1,54 @@
 #include "util.h"
-#include <fcntl.h>
-#include <algorithm>
 
 // split on a single‐char delimiter
-std::vector<std::string> split(const std::string& s, char delim) {
+std::vector<std::string> split(const std::string& s, char delim)
+{
     std::vector<std::string> out;
     std::string cur;
-    for (size_t i = 0; i < s.size(); ++i) {
-        if (s[i] == delim) {
+
+    for (size_t i = 0; i < s.size(); ++i)
+	{
+        if (s[i] == delim)
+		{
             out.push_back(cur);
             cur.clear();
-        } else {
-            cur.push_back(s[i]);
         }
+		else
+            cur.push_back(s[i]);
     }
     out.push_back(cur);
     return out;
 }
 
 // set non-blocking
-void set_nb(int fd) {
+void set_nb(int fd)
+{
     int f = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, f | O_NONBLOCK);
 }
 
-Client* find_client(int fd) {
+Client* find_client(int fd)
+{
     for (size_t i = 0; i < clients.size(); ++i)
-        if (clients[i]->fd == fd) return clients[i];
+        if (clients[i]->fd == fd)
+			return clients[i];
     return NULL;
 }
 
-Client* find_nick(const std::string& n) {
+Client* find_nick(const std::string& n)
+{
     std::map<std::string,Client*>::iterator it = nick_map.find(n);
-    return it == nick_map.end() ? NULL : it->second;
+    if (it == nick_map.end())
+		return NULL;
+	else
+		return it->second;
 }
 
-Channel* get_chan(const std::string& name) {
+Channel* get_chan(const std::string& name)
+{
     Channel*& ch = channels[name];
-    if (!ch) {
+    if (!ch)
+	{
         ch = new Channel();
         ch->name          = name;
         ch->topic         = "";
@@ -49,37 +60,26 @@ Channel* get_chan(const std::string& name) {
     return ch;
 }
 
-void queue_raw(Client* c, const std::string& line) {
+void queue_raw(Client* c, const std::string& line)
+{
     c->send_q.push_back(line + "\r\n");
     // arm POLLOUT
-    for (size_t i = 0; i < fds.size(); ++i) {
-        if (fds[i].fd == c->fd) {
+    for (size_t i = 0; i < fds.size(); ++i)
+	{
+        if (fds[i].fd == c->fd)
+		{
             fds[i].events |= POLLOUT;
             return;
         }
     }
 }
 
-void send_err(Client* c,
-              const std::string& code,
-              const std::string& tgt,
-              const std::string& txt)
+void send_err(Client* c, const std::string& code, const std::string& tgt, const std::string& txt)
 {
-    queue_raw(c, ":" + server_name
-                + " " + code
-                + " " + c->nick
-                + " " + tgt
-                + " :" + txt);
+    queue_raw(c, ":" + server_name + " " + code + " " + c->nick + " " + tgt + " :" + txt);
 }
 
-void send_rpl(Client* c,
-              const std::string& code,
-              const std::string& tgt,
-              const std::string& txt)
+void send_rpl(Client* c, const std::string& code, const std::string& tgt, const std::string& txt)
 {
-    queue_raw(c, ":" + server_name
-                + " " + code
-                + " " + c->nick
-                + " " + tgt
-                + " :" + txt);
+    queue_raw(c, ":" + server_name + " " + code + " " + c->nick + " " + tgt + " :" + txt);
 }

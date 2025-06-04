@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <fcntl.h>
+#include <algorithm>
 #include "state.h"
 
 // Basic helpers:
@@ -25,4 +27,4 @@ void send_rpl(Client* c,
               const std::string& tgt,
               const std::string& txt);
 
-#endif // UTIL_H
+#endif
