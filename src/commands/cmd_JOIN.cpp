@@ -66,37 +66,31 @@ void cmd_JOIN(Client* c, const std::vector<std::string>& p)
 		else
             queue_raw(c, ":" + server_name + " 332 " + c->nick + " " + chanName + " :" + ch->topic);
 
-			
-			// ——— send NAMES (353) + 366 ———
+		// ——— send NAMES (353) + 366 ———
 		std::ostringstream ns;
 		for (size_t j = 0; j < ch->members.size(); ++j)
 		{
 			if (j)
-			ns << " ";
+				ns << " ";
 			if (ch->operators.count(ch->members[j]->nick))
-            ns << "@" << ch->members[j]->nick;
+            	ns << "@" << ch->members[j]->nick;
 			else
-            ns << ch->members[j]->nick;
+        		ns << ch->members[j]->nick;
 		}
 		queue_raw(c, ":" + server_name + " 353 " + c->nick + " = " + chanName + " :" + ns.str());
 		queue_raw(c, ":" + server_name + " 366 " + c->nick + " " + chanName + " :End of /NAMES list");
-			
-
-		// 1) “* masmar has joined the channel: #room”
-		// std::string joinNotice = ":" + server_name + " NOTICE " + c->nick + " :* " + c->nick + " has joined the channel: " + chanName;
-		// queue_raw(c, joinNotice);
 	
-		// 2) “* Invite mode: +i” or “* Invite mode: -i”
+		//“* Invite mode: +i” or “* Invite mode: -i”
 		std::string inviteMode;
 		if (ch->invite_only)
 			inviteMode = "+i";
 		else
 			inviteMode = "-i";
-	
+
 		std::string inviteNotice = ":" + server_name + " NOTICE " + c->nick + " :* Invite mode: " + inviteMode;
 		queue_raw(c, inviteNotice);
 
-		// 3) “* Key mode: +k <key>” or “* Key mode: -k”
+		//“* Key mode: +k <key>” or “* Key mode: -k”
 		std::string keyMode;
 		if (!ch->key.empty())
 		{
@@ -109,7 +103,7 @@ void cmd_JOIN(Client* c, const std::vector<std::string>& p)
 		std::string keyNotice = ":" + server_name + " NOTICE " + c->nick + " :* Key mode: " + keyMode;
 		queue_raw(c, keyNotice);
 
-		// 4) “* limit is : <limit>” or “* limit is : no limit”
+		//“* limit is : <limit>” or “* limit is : no limit”
 		std::string limitStr;
 		if (ch->limit > 0)
 		{
@@ -124,7 +118,7 @@ void cmd_JOIN(Client* c, const std::vector<std::string>& p)
 		std::string limitNotice = ":" + server_name + " NOTICE " + c->nick + " :* limit is : " + limitStr;
 		queue_raw(c, limitNotice);
 
-		// 5) “* TOPIC LOCKED: YES” or “* TOPIC LOCKED: NO”
+		//“* TOPIC LOCKED: YES” or “* TOPIC LOCKED: NO”
 		std::string topicLocked;
 		if (ch->topic_locked)
 			topicLocked = "YES";
@@ -136,23 +130,23 @@ void cmd_JOIN(Client* c, const std::vector<std::string>& p)
 
 		//send current channel‐mode (+i/+t/+k/+l) to the JOINing user ───
 		{
-		std::string modeFlags = "+";
-        std::ostringstream params;
-
-        if (ch->invite_only)
-            modeFlags += "i";
-        if (ch->topic_locked)
-            modeFlags += "t";
-        if (!ch->key.empty())
-		{
-            modeFlags += "k";
-            params << " " << ch->key;
-        }
-        if (ch->limit > 0)
-		{
-            modeFlags += "l";
-            params << " " << ch->limit;
-        }
+			std::string modeFlags = "+";
+        	std::ostringstream params;
+	
+        	if (ch->invite_only)
+        	    modeFlags += "i";
+        	if (ch->topic_locked)
+        	    modeFlags += "t";
+        	if (!ch->key.empty())
+			{
+        	    modeFlags += "k";
+        	    params << " " << ch->key;
+        	}
+        	if (ch->limit > 0)
+			{
+        	    modeFlags += "l";
+        	    params << " " << ch->limit;
+        	}
 
             // Only send if at least one flag is set
             if (modeFlags.size() > 1)
