@@ -3,8 +3,8 @@
 // split on a single‐char delimiter
 std::vector<std::string> split(const std::string& s, char delim)
 {
-    std::vector<std::string> out;
-    std::string cur;
+    std::vector<std::string>	out;
+    std::string					cur;
 
     for (size_t i = 0; i < s.size(); ++i)
 	{
@@ -13,9 +13,11 @@ std::vector<std::string> split(const std::string& s, char delim)
             out.push_back(cur);
             cur.clear();
         }
+
 		else
             cur.push_back(s[i]);
     }
+
     out.push_back(cur);
     return out;
 }
@@ -23,23 +25,27 @@ std::vector<std::string> split(const std::string& s, char delim)
 // set non-blocking
 void set_nb(int fd)
 {
-    int f = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, f | O_NONBLOCK);
+    fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
 Client* find_client(int fd)
 {
     for (size_t i = 0; i < clients.size(); ++i)
+	{
         if (clients[i]->fd == fd)
 			return clients[i];
+	}
+
     return NULL;
 }
 
 Client* find_nick(const std::string& n)
 {
     std::map<std::string,Client*>::iterator it = nick_map.find(n);
+
     if (it == nick_map.end())
 		return NULL;
+
 	else
 		return it->second;
 }
@@ -47,6 +53,7 @@ Client* find_nick(const std::string& n)
 Channel* get_chan(const std::string& name)
 {
     Channel*& ch = channels[name];
+
     if (!ch)
 	{
         ch = new Channel();
@@ -82,4 +89,17 @@ void send_err(Client* c, const std::string& code, const std::string& tgt, const 
 void send_rpl(Client* c, const std::string& code, const std::string& tgt, const std::string& txt)
 {
     queue_raw(c, ":" + server_name + " " + code + " " + c->nick + " " + tgt + " :" + txt);
+}
+
+
+bool is_number(const std::string& s) {
+    if (s.empty()) return false;
+    size_t start = 0;
+    if (s[0] == '+' || s[0] == '-')
+        start = 1;
+    for (size_t i = start; i < s.size(); ++i) {
+        if (!std::isdigit(s[i]))
+            return false;
+    }
+    return true;
 }

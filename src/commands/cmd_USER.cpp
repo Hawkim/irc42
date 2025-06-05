@@ -11,20 +11,24 @@ void cmd_USER(Client* c, const std::vector<std::string>& p)
         std::cout << "USER: Not enough parameters for client " << c->fd << "\n";
         return;
     }
+
     if (c->registered)
 	{
         send_err(c, "462", "USER", "You may not re-register");
         std::cout << "USER: Already registered (client " << c->fd << ")\n";
         return;
     }
-    c->user     = p[1];
+
+    c->user = p[1];
     c->realname = p[4];
+
     if (!c->got_pass || c->nick.empty())
 	{
         send_err(c, "451", "*", "You have not registered");
         std::cout << "USER: client " << c->fd << " missing PASS/NICK\n";
         return;
     }
+
     c->registered = true;
 
     queue_raw(c, ":" + server_name + " 001 " + c->nick + " :Welcome to the IRC server: " + server_name);

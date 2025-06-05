@@ -11,30 +11,39 @@ void cmd_INVITE(Client* c, const std::vector<std::string>& p)
         std::cout << "INVITE: Not enough parameters for client " << c->fd << "\n";
         return;
     }
-    const std::string& nick    = p[1];
+
+    const std::string& nick = p[1];
+
     const std::string& chanName= p[2];
+
     Channel* ch = get_chan(chanName);
 
     bool on_chan = false;
     for (size_t i = 0; i < ch->members.size(); ++i)
+	{
         if (ch->members[i] == c)
 		{
 			on_chan = true;
 			break;
 		}
+	}
+
     if (!on_chan)
 	{
         send_err(c, "442", chanName, "You're not on that channel");
         std::cout << "INVITE: Client " << c->fd << " not on channel " << chanName << "\n";
         return;
     }
+
     if (!ch->operators.count(c->nick))
 	{
         send_err(c, "482", chanName, "You're not channel operator");
         std::cout << "INVITE: Client " << c->fd << " not operator on " << chanName << "\n";
         return;
     }
+
     Client* tgt = find_nick(nick);
+
     if (!tgt)
 	{
         send_err(c, "401", nick, "No such nick");

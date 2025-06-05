@@ -9,15 +9,19 @@ static bool client_receive(Client* c)
     while (true)
 	{
         ssize_t n = recv(c->fd, buf, sizeof(buf), 0);
+
         if (n > 0)
 		{
             c->recv_buf.append(buf, n);
             continue;
         }
+
         if (n == 0)
 			return false; // clean EOF
+
         if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
             break;
+
         return false; // error
     }
     return true;
@@ -32,8 +36,10 @@ static std::string client_next_msg(Client* c)
 {
     size_t pos = c->recv_buf.find('\n');
     std::string line = c->recv_buf.substr(0, pos);
+
     if (!line.empty() && line[line.size()-1] == '\r')
         line.resize(line.size()-1);
+
     c->recv_buf.erase(0, pos + 1);
     return line;
 }
@@ -46,6 +52,7 @@ static void cleanup_client(Client* c)
         Channel* ch = it->second;
         bool was_member = false;
         bool was_op = false;
+
         for (size_t i = 0; i < ch->members.size(); ++i)
 		{
             if (ch->members[i] == c)
@@ -56,12 +63,15 @@ static void cleanup_client(Client* c)
                 break;
             }
         }
+
         if (was_member)
 		{
             // Notify channel members about the quit
             std::string quitMsg = ":" + c->nick + "!" + c->user + "@" + server_name + " QUIT :Client disconnected";
+
             for (size_t j = 0; j < ch->members.size(); ++j)
                 queue_raw(ch->members[j], quitMsg);
+
             // Remove from operators and invited lists
             ch->operators.erase(c->nick);
             ch->invited.erase(c->nick);
@@ -75,6 +85,7 @@ static void cleanup_client(Client* c)
 
                 // Broadcast the MODE change
                 std::string modeMsg = ":" + server_name + " MODE " + ch->name + " +o " + newOp->nick;
+
                 for (size_t j = 0; j < ch->members.size(); ++j)
                     queue_raw(ch->members[j], modeMsg);
             }
@@ -114,11 +125,13 @@ void init_server(int port, const std::string& pass)
 {
     server_pass = pass;
     listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+
     if (listen_fd < 0)
 	{
 		perror("socket");
 		exit(1);
 	}
+
     set_nb(listen_fd);
 
     int opt = 1;
@@ -138,6 +151,7 @@ void init_server(int port, const std::string& pass)
             perror("bind");
         exit(1);
     }
+
     if (listen(listen_fd, SOMAXCONN) < 0)
 	{
 		perror("listen");
@@ -158,10 +172,12 @@ void server_run()
                 continue;
             break;
         }
+
         for (size_t i = 0; i < fds.size(); ++i)
         {
             if (!fds[i].revents)
                 continue;
+
             int fd = fds[i].fd;
 
             // new connection
@@ -169,10 +185,13 @@ void server_run()
             {
                 struct sockaddr_in cli; socklen_t len = sizeof(cli);
                 int cfd = accept(listen_fd,(sockaddr*)&cli,&len);
+
                 if (cfd < 0)
                     continue;
+
                 set_nb(cfd);
                 Client* c = new Client();
+
                 c->fd = cfd;
                 c->got_pass = c->registered = false;
                 clients.push_back(c);
@@ -183,6 +202,7 @@ void server_run()
 
             // find client
             Client* c = find_client(fd);
+
             if (!c)
                 continue;
 
@@ -192,8 +212,10 @@ void server_run()
                 if (!client_receive(c))
                 {
                     std::cout << "Client disconnected: fd = " << fd;
+
                     if (!c->nick.empty())
                         std::cout << " | Nick = " << c->nick;
+
                     std::cout << "\n";
                     cleanup_client(c);
                     continue;
@@ -202,21 +224,28 @@ void server_run()
                 {
                     std::string line = client_next_msg(c);
                     std::cout << "Parsing command from client " << fd << " (";
+
                     if (c->nick.empty())
                         std::cout << "unknown";
+
                     else
                         std::cout << c->nick;
+
                     std::cout << "): " << line << "\n";
                     std::vector<std::string> tok = split(line, ' ');
                     std::string cmd = tok[0];
+
                     if (!c->registered)
                     {
                         if (cmd == "PASS")
                             cmd_PASS(c, tok);
+
                         else if (cmd == "NICK")
                             cmd_NICK(c, tok);
+
                         else if (cmd == "USER")
                             cmd_USER(c, tok);
+
                         else
                         {
                             send_err(c,"451","*","You have not registered");
@@ -224,24 +253,33 @@ void server_run()
                                     << cmd << "\n";
                         }
                     }
+
                     else
                     {
                         if (cmd == "JOIN")
                             cmd_JOIN(c, tok);
+
                         else if (cmd == "PART")
                             cmd_PART(c, tok);
+
                         else if (cmd == "PRIVMSG")
                             cmd_PRIVMSG(c, tok);
+
                         else if (cmd == "INVITE")
                             cmd_INVITE(c, tok);
+
                         else if (cmd == "KICK")
                             cmd_KICK(c, tok);
+
                         else if (cmd == "MODE")
                             cmd_MODE(c, tok);
+
                         else if (cmd == "TOPIC")
                             cmd_TOPIC(c, tok);
+
                         else if (cmd == "NAMES")
                             cmd_NAMES(c, tok);
+
                         else
                         {
                             send_err(c,"421",cmd,"Unknown command");
@@ -258,13 +296,17 @@ void server_run()
                 {
                     const std::string& m = c->send_q.front();
                     ssize_t s = send(fd, m.c_str(), m.size(), 0);
+
                     if (s <= 0)
                         break;
+
                     if ((size_t)s < m.size())
                         c->send_q.front().erase(0, s);
+
                     else
                         c->send_q.pop_front();
                 }
+
                 if (c->send_q.empty())
                     fds[i].events &= ~POLLOUT;
             }

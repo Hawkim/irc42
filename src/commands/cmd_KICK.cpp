@@ -11,12 +11,14 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
         std::cout << "KICK: Not enough parameters for client " << c->fd << "\n";
         return;
     }
+
     const std::string& chanName   = p[1];
     const std::string& targetNick = p[2];
     Channel* ch = get_chan(chanName);
 
     // verify kicker is on channel
     bool on_chan = false;
+
     for (size_t i = 0; i < ch->members.size(); ++i)
 	{
         if (ch->members[i] == c)
@@ -25,12 +27,14 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
             break;
         }
     }
+
     if (!on_chan)
 	{
         send_err(c,"442",chanName,"You're not on that channel");
         std::cout << "KICK: Client " << c->fd << " not on channel " << chanName << "\n";
         return;
     }
+
     // verify kicker is operator
     if (!ch->operators.count(c->nick))
 	{
@@ -38,9 +42,11 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
         std::cout << "KICK: Client " << c->fd << " not operator on " << chanName << "\n";
         return;
     }
+
     // find target client
     Client* tgt = find_nick(targetNick);
     bool tgt_on_chan = false;
+
     if (tgt)
 	{
         for (size_t i = 0; i < ch->members.size(); ++i)
@@ -52,6 +58,7 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
             }
         }
     }
+
     if (!tgt || !tgt_on_chan)
 	{
         send_err(c,"441",targetNick,"They aren't on that channel");
@@ -64,13 +71,16 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
 
     // build KICK message
     std::string reason;
+
     if (p.size() > 3)
 	{
 		if (p[3].size() && p[3][0] == ':')
 			reason = " :" + p[3].substr(1);
+
 		else
 			reason = " :" + p[3];
     }
+
     std::string kickMsg = ":" + c->nick + "!" + c->user + "@" + server_name + " KICK " + chanName + " " + targetNick + reason;
 
     // notify kicked client
@@ -86,6 +96,7 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
 	{
         queue_raw(ch->members[i], kickMsg);
     }
+
     std::cout << "Client " << c->fd << " kicked " << targetNick << " from channel " << chanName << "\n";
 
     // if channel now empty, delete it
@@ -104,10 +115,12 @@ void cmd_KICK(Client* c, const std::vector<std::string>& p)
         ch->operators.insert(newOp->nick);
 
         std::string modeMsg = ":" + server_name + " MODE " + chanName + " +o " + newOp->nick;
+
         for (size_t j = 0; j < ch->members.size(); ++j)
 		{
             queue_raw(ch->members[j], modeMsg);
         }
+
         std::cout << "KICK: handed operator to " << newOp->nick << " on channel " << chanName << "\n";
     }
 }

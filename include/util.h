@@ -18,13 +18,9 @@ Channel* get_chan(const std::string& name);
 
 // sending & queuing
 void queue_raw(Client* c, const std::string& line);
-void send_err(Client* c,
-              const std::string& code,
-              const std::string& tgt,
-              const std::string& txt);
-void send_rpl(Client* c,
-              const std::string& code,
-              const std::string& tgt,
-              const std::string& txt);
+void send_err(Client* c, const std::string& code, const std::string& tgt, const std::string& txt);
+void send_rpl(Client* c, const std::string& code, const std::string& tgt, const std::string& txt);
+
+bool is_number(const std::string& s);
 
 #endif

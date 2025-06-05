@@ -6,12 +6,13 @@
 void cmd_NAMES(Client* c, const std::vector<std::string>& p)
 {
     std::vector<std::string> chans;
+
     if (p.size() < 2)
 	{
-        for (std::map<std::string,Channel*>::iterator it = channels.begin();
-             it != channels.end(); ++it)
+        for (std::map<std::string,Channel*>::iterator it = channels.begin(); it != channels.end(); ++it)
             chans.push_back(it->first);
     }
+
 	else
         chans = split(p[1], ',');
 
@@ -21,13 +22,17 @@ void cmd_NAMES(Client* c, const std::vector<std::string>& p)
         Channel* ch = channels[cn];
 
         std::ostringstream message;
-        if (ch) {
+
+        if (ch)
+		{
             for (size_t j = 0; j < ch->members.size(); ++j)
 			{
                 if (j)
 					message << " ";
+
                 if (ch->operators.count(ch->members[j]->nick))
                     message << "@" << ch->members[j]->nick;
+
                 else
                     message << ch->members[j]->nick;
             }

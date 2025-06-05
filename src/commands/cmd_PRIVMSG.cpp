@@ -16,6 +16,7 @@ void cmd_PRIVMSG(Client* c, const std::vector<std::string>& p)
 
     // Reconstruct the full message text from p[2] onward
     std::string txt;
+
     for (size_t i = 2; i < p.size(); ++i)
 	{
         if (i > 2)
@@ -30,6 +31,7 @@ void cmd_PRIVMSG(Client* c, const std::vector<std::string>& p)
 	{
         Channel* ch = get_chan(tgt);
         bool on_chan = false;
+
         for (size_t i = 0; i < ch->members.size(); ++i)
 		{
             if (ch->members[i] == c)
@@ -38,6 +40,7 @@ void cmd_PRIVMSG(Client* c, const std::vector<std::string>& p)
 				break;
 			}
         }
+
         if (!on_chan)
 		{
             send_err(c, "442", tgt, "You're not on that channel");
@@ -46,6 +49,7 @@ void cmd_PRIVMSG(Client* c, const std::vector<std::string>& p)
         }
 
         std::string m = ":" + c->nick + "!" + c->user + "@" + server_name + " PRIVMSG " + tgt + " :" + txt;
+
         for (size_t i = 0; i < ch->members.size(); ++i)
 		{
             if (ch->members[i] != c)
@@ -54,9 +58,11 @@ void cmd_PRIVMSG(Client* c, const std::vector<std::string>& p)
 
         std::cout << "Client " << c->fd << " sent PRIVMSG to " << tgt << ": " << txt << "\n";
     }
+
     else
 	{
         Client* d = find_nick(tgt);
+
         if (!d)
 		{
             send_err(c, "401", tgt, "No such nick");

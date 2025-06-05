@@ -5,22 +5,22 @@ int    listen_fd;
 std::string server_pass;
 std::string server_name = "ircserv";
 
-std::vector<struct pollfd> fds;
-std::vector<Client*>        clients;
-std::map<std::string,Client*>  nick_map;
-std::map<std::string,Channel*> channels;
+std::vector<struct pollfd>		fds;
+std::vector<Client*>			clients;
+std::map<std::string,Client*>	nick_map;
+std::map<std::string,Channel*>	channels;
 
 // Global shutdown flag
 bool g_server_shutdown = false;
 
 void cleanup_server()
 {
-    // Close all client connections
     for (size_t i = 0; i < clients.size(); ++i)
 	{
         close(clients[i]->fd);
         delete clients[i];
     }
+
     clients.clear();
     nick_map.clear();
 
@@ -29,6 +29,7 @@ void cleanup_server()
 	{
         delete it->second;
     }
+
     channels.clear();
 
     // Close server socket
